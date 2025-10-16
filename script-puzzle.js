@@ -1,10 +1,10 @@
+// script-puzzle.js
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- KLÍČOVÁ ZMĚNA 1: FUNKCE PRO STABILIZACI VÝŠKY NA MOBILECH ---
     function setViewportHeightUnit() {
         // Měříme skutečnou výšku okna a definujeme novou CSS proměnnou --vh
         let vh = window.innerHeight * 0.01;
-        // Nastavíme --vh na kořenový element dokumentu (html)
         document.documentElement.style.setProperty('--vh', `${vh}px`);
     }
 
@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isSolved = false; 
 
     const puzzleImages = [
+        // ... (Pole s puzzleImages je nezměněno) ...
         'images/puzzle1.jpg',
         'images/puzzle2.jpg',
         'images/Borotin4R.jpg',
@@ -69,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
 
     const puzzleMessages = {
+        // ... (Objekt s puzzleMessages je nezměněn) ...
         'images/puzzle1.jpg': 'Bronzová sekera s tulejí, doba bronzová - kultura lužických popelnicových polí',
         'images/puzzle2.jpg': 'Bronzový srp, doba bronzová - kultura lužických popelnicových polí',
         'images/Borotin4R.jpg': 'Rekonstrukce vzhledu ženy s použitím artefaktů z depotu Borotín 4. Doba bronzová - kultura lužických popelnicových polí',
@@ -117,35 +119,76 @@ document.addEventListener('DOMContentLoaded', () => {
     let offsetX = 0; 
     let offsetY = 0;
 
-    // --- KLÍČOVÁ ZMĚNA 2: Funkce pro dimenzování (Fix stability a velikosti/deformace) ---
+    // --- KLÍČOVÁ ZMĚNA 2: Funkce pro dimenzování (Nyní počítá volné místo) ---
     function calculatePuzzleDimensions(imageNaturalWidth, imageNaturalHeight) {
-        // ZÍSKÁME STABILNÍ výšku okna z CSS proměnné --vh
-        const vhValue = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--vh'));
-        const stableViewportHeight = vhValue * 100; // 100% stabilní výšky (body)
         
-        // Používáme ŠÍŘKU okna
+        // ZÍSKÁME STABILNÍ výšku okna z CSS proměnné --vh (pro mobilní fix)
+        const vhValue = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--vh'));
+        const stableViewportHeight = vhValue * 100; // 100% stabilní výšky
+        
         const viewportWidth = window.innerWidth;
 
-        // ZMĚNA 2: Mírné zvýšení poměru pro landscape, protože je teď více místa
-        const verticalPaddingRatio = 0.98; 
+        // 1. Zjistíme, kolik místa zabírají OSTATNÍ prvky
+        const headerElement = document.querySelector('.header');
+        const navControlsElement = document.querySelector('.navigation-controls');
+        const gameControlsElement = document.querySelector('.game-controls');
+        const messageElement = document.getElementById('message');
+        
+        // V CSS body je padding: 20px (nahoře i dole)
+        const bodyPadding = parseFloat(window.getComputedStyle(document.body).paddingTop) + parseFloat(window.getComputedStyle(document.body).paddingBottom);
+
+        let occupiedHeight = bodyPadding; // Začínáme s paddingem body
+        
+        // Sčítáme výšky elementů (včetně paddingu a borderu) a jejich vnější okraje (marginy)
+        const elementsToMeasure = [headerElement, navControlsElement, gameControlsElement, messageElement];
+
+        elementsToMeasure.forEach(el => {
+            if (el) {
+                const style = window.getComputedStyle(el);
+                // offsetHeight je výška elementu včetně paddingu a borderu
+                const height = el.offsetHeight; 
+                // Vnější okraje
+                const marginTop = parseFloat(style.marginTop);
+                const marginBottom = parseFloat(style.marginBottom);
+                
+                occupiedHeight += height + marginTop + marginBottom;
+            }
+        });
+        
+        // Rezerva 10px navíc pro jistotu, že se prvek nezasekne na hraně
+        const extraVerticalReserve = 10; 
+        
+        // Maximální povolená výška pro puzzle je zbytek místa
+        const maxHeightLimit = stableViewportHeight - occupiedHeight - extraVerticalReserve; 
+
+        // Maximální povolená šířka pro puzzle (95% šířky okna)
         const maxAllowedWidth = viewportWidth * 0.95; 
-        const maxHeightLimit = stableViewportHeight * verticalPaddingRatio; // Stabilní vertikální limit
 
         const imageAspectRatio = imageNaturalWidth / imageNaturalHeight;
+        
+        // --- Výpočet rozměrů ---
         
         // 1. Zkusíme dimenzovat podle maximální šířky
         let finalWidth = maxAllowedWidth;
         let finalHeight = finalWidth / imageAspectRatio;
         
         if (finalHeight > maxHeightLimit) {
-            // 2. Pokud je vypočtená výška příliš velká, dimenzujeme podle výšky (a zachováme poměr stran)
+            // 2. Pokud je vypočtená výška příliš velká, dimenzujeme podle VÝŠKY
             finalHeight = maxHeightLimit;
             finalWidth = finalHeight * imageAspectRatio;
         }
 
-        // Zajištění minimální velikosti (např. 200px)
-        finalWidth = Math.max(finalWidth, 200);
-        finalHeight = Math.max(finalHeight, 200);
+        // Zajištění minimální velikosti
+        finalWidth = Math.max(finalWidth, 150);
+        finalHeight = Math.max(finalHeight, 150);
+        
+        // Kontrola, aby nedošlo k záporným rozměrům
+        if (finalWidth <= 0 || finalHeight <= 0) {
+             finalWidth = 1; // Zobrazíme jako minimum, nebo skryjeme (dle potřeby)
+             finalHeight = 1;
+             console.warn("Dostupný prostor je příliš malý, puzzle je skryto/minimalizováno.");
+        }
+
 
         dynamicTotalPuzzleWidth = finalWidth;
         dynamicTotalPuzzleHeight = finalHeight;
@@ -187,7 +230,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // --- Funkce pro načtení a inicializaci puzzle (Nyní nastavuje isSolved = false) ---
+    // ... (ostatní funkce - loadPuzzle, initializePuzzle, positionPieces, shufflePieces, drag & drop - jsou nezměněny) ...
+    // ... (pokud je to nutné, vložte sem zbytek kódu, abychom měli jistotu, že je kompletní)
+
+    function positionPieces() {
+        pieces.forEach((piece, index) => {
+            const targetIndex = currentPositions[index];
+            const row = Math.floor(targetIndex / numCols);
+            const col = targetIndex % numCols;
+            piece.style.gridRowStart = row + 1;
+            piece.style.gridColumnStart = col + 1;
+            piece.style.removeProperty('transform'); 
+            piece.style.removeProperty('left');
+            piece.style.removeProperty('top');
+            piece.style.removeProperty('z-index');
+        });
+    }
+
+    function shufflePieces() {
+        messageDisplay.textContent = '';
+        pieces.forEach(piece => piece.classList.remove('correct')); 
+        
+        for (let i = currentPositions.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [currentPositions[i], currentPositions[j]] = [currentPositions[j], currentPositions[i]];
+        }
+        positionPieces();
+        isSolved = false; 
+        checkWin();
+    }
+    
     function loadPuzzle(index) {
         if (index < 0 || index >= puzzleImages.length) {
             console.error('Neplatný index puzzle obrázku.');
@@ -264,35 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         shufflePieces(); 
     }
-
-    function positionPieces() {
-        pieces.forEach((piece, index) => {
-            const targetIndex = currentPositions[index];
-            const row = Math.floor(targetIndex / numCols);
-            const col = targetIndex % numCols;
-            piece.style.gridRowStart = row + 1;
-            piece.style.gridColumnStart = col + 1;
-            piece.style.removeProperty('transform'); 
-            piece.style.removeProperty('left');
-            piece.style.removeProperty('top');
-            piece.style.removeProperty('z-index');
-        });
-    }
-
-    function shufflePieces() {
-        messageDisplay.textContent = '';
-        pieces.forEach(piece => piece.classList.remove('correct')); 
-        
-        for (let i = currentPositions.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [currentPositions[i], currentPositions[j]] = [currentPositions[j], currentPositions[i]];
-        }
-        positionPieces();
-        isSolved = false; 
-        checkWin();
-    }
-
-    // --- Zbytek logiky pro drag and drop a kontrolu výhry je beze změny ---
+    
+    // ... (event listeners pro drag/drop a checkWin) ...
 
     function startDrag(e) {
         if (isSolved) {
@@ -339,7 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function endDrag(e) {
         if (!draggedPiece) return;
         const clientX = e.clientX !== undefined ? e.clientX : e.changedTouches[0].clientX;
-        const clientY = e.clientY !== undefined ? e.clientY : e.changedTouches[0].clientY;
+        const clientY = e.clientY !== undefined ? e.changedTouches[0].clientY;
         draggedPiece.style.visibility = 'hidden';
         let targetElement = document.elementFromPoint(clientX, clientY);
         draggedPiece.style.visibility = 'visible';
@@ -421,26 +466,23 @@ document.addEventListener('DOMContentLoaded', () => {
         nextButton.disabled = true;
     }
 
-    // --- Debounce pro resize (volá POUZE přepočet dimenzí, bez nového míchání) ---
+    // --- KLÍČOVÁ ZMĚNA 3: Debounce pro resize (Upraveno pro volání setViewportHeightUnit vždy) ---
     let resizeTimer;
     let currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
 
     window.addEventListener('resize', () => {
-        // Opětovné nastavení --vh hodnoty, aby se zachytila nová, stabilní velikost
+        // Opětovné nastavení --vh hodnoty
         setViewportHeightUnit(); 
         
         clearTimeout(resizeTimer);
         const newOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
         
-        // Vzhledem k použití position: fixed a --vh by se změny neměly projevit 
-        // při pouhém skrytí lišty. Přesto voláme recalculateDimensions.
         if (newOrientation !== currentOrientation) {
             currentOrientation = newOrientation;
+            // Delší zpoždění pro skutečnou změnu orientace
             resizeTimer = setTimeout(recalculateDimensions, 250);
         } else {
-            // Rychlejší zpoždění pro skrytí/zobrazení lišty (resize s neměnnou orientací)
-            // Recalculate je nutný, protože i když je --vh stabilní, dostupný prostor
-            // pro puzzle se mohl změnit kvůli prvkům jako navigation-controls.
+            // Rychlejší zpoždění pro skrytí/zobrazení lišty nebo menší úpravy okna
             resizeTimer = setTimeout(recalculateDimensions, 50);
         }
     });
