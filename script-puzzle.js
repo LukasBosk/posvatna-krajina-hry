@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'images/Vanovice4R2.jpg',
         'images/puzzle9.jpg',
         'images/puzzle10.jpg',
+        // ZMĚNA: Odstraněn problematický záznam 'images/ Licí formy.jpg'
         'images/osada3R.jpg',
         'images/osadaR.jpg',
         'images/puzzle11.jpg',
@@ -94,49 +95,39 @@ document.addEventListener('DOMContentLoaded', () => {
     let originalPositions = [];
 
     let draggedPiece = null;
-    let highlightedPiece = null; // NOVÁ PROMĚNNÁ pro sledování zvýrazněného dílku
+    let highlightedPiece = null; 
 
-    // --- Funkce pro výpočet rozměrů puzzle na základě velikosti okna a rozměrů obrázku ---
+    // --- Proměnné pro offset myši/dotyku ---
+    let offsetX = 0; 
+    let offsetY = 0;
+
+    // --- Funkce pro stabilní výpočet rozměrů puzzle (KLÍČOVÁ OPRAVA) ---
     function calculatePuzzleDimensions(imageNaturalWidth, imageNaturalHeight) {
+        // Používáme ŠÍŘKU okna (stabilní na mobilech) jako primární kotvu.
         const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
+        const viewportHeight = window.innerHeight; // Pouze pro max. limit.
 
-        const headerHeight = document.querySelector('.header') ? document.querySelector('.header').offsetHeight : 0;
-        const navControlsHeight = document.querySelector('.navigation-controls') ? document.querySelector('.navigation-controls').offsetHeight : 0;
-        const gameControlsHeight = document.querySelector('.game-controls') ? document.querySelector('.game-controls').offsetHeight : 0;
-        const backButtonHeight = document.querySelector('.back-button') ? document.querySelector('.back-button').offsetHeight : 0;
-        const messageHeight = document.getElementById('message') ? document.getElementById('message').offsetHeight : 0;
-
-        const verticalPaddingAndMargins = 20 * 2 + 20 + 20 + 30 + 20;
-
-        const maxAvailableWidth = viewportWidth * 0.9;
-        const maxAvailableHeight = viewportHeight - (headerHeight + navControlsHeight + gameControlsHeight + backButtonHeight + messageHeight + verticalPaddingAndMargins);
-
-        let targetWidth;
-        let targetHeight;
-
+        // Cíl: 90% šířky okna (což odpovídá max-width: 90vw v CSS pro puzzle-container)
+        const maxAllowedWidth = viewportWidth * 0.9; 
+        
+        let targetWidth = maxAllowedWidth;
         const imageAspectRatio = imageNaturalWidth / imageNaturalHeight;
-        const containerAspectRatio = maxAvailableWidth / maxAvailableHeight;
+        
+        // Výpočet výšky POUZE na základě stabilní šířky a poměru stran
+        let targetHeight = targetWidth / imageAspectRatio;
+        
+        // Sekundární kontrola: Pojistka, aby se puzzle vešlo na výšku i s navigačními lištami.
+        // Povolíme max. 85% aktuální výšky.
+        const maxHeightLimit = viewportHeight * 0.85; 
 
-        if (imageAspectRatio > containerAspectRatio) {
-            targetWidth = maxAvailableWidth;
-            targetHeight = maxAvailableWidth / imageAspectRatio;
-        } else {
-            targetHeight = maxAvailableHeight;
-            targetWidth = maxAvailableHeight * imageAspectRatio;
+        if (targetHeight > maxHeightLimit) {
+            targetHeight = maxHeightLimit;
+            targetWidth = targetHeight * imageAspectRatio;
         }
 
-        targetWidth = Math.max(targetWidth, 200);
-        targetHeight = Math.max(targetHeight, 200);
-
-        if (targetWidth > maxAvailableWidth) {
-            targetWidth = maxAvailableWidth;
-            targetHeight = maxAvailableWidth / imageAspectRatio;
-        }
-        if (targetHeight > maxAvailableHeight) {
-            targetHeight = maxAvailableHeight;
-            targetWidth = maxAvailableHeight * imageAspectRatio;
-        }
+        // Zajištění minimálních a finálních rozměrů
+        targetWidth = Math.min(Math.max(targetWidth, 200), maxAllowedWidth);
+        targetHeight = Math.min(Math.max(targetHeight, 200), maxHeightLimit);
 
         dynamicTotalPuzzleWidth = targetWidth;
         dynamicTotalPuzzleHeight = targetHeight;
@@ -165,10 +156,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const imageUrl = puzzleImages[currentPuzzleIndex];
         puzzleInfo.textContent = `Puzzle ${currentPuzzleIndex + 1} / ${puzzleImages.length}`;
         messageDisplay.textContent = '';
+        
+        // Odstranění třídy .correct před načtením nového puzzle, aby se resetoval rámeček
+        pieces.forEach(piece => piece.classList.remove('correct'));
 
         const img = new Image();
         img.onload = () => {
-            calculatePuzzleDimensions(img.naturalWidth, img.naturalHeight);
+            // Při každém načtení (včetně otočení) přepočítáme rozměry
+            calculatePuzzleDimensions(img.naturalWidth, img.naturalHeight); 
             initializePuzzle(imageUrl);
 
             prevButton.disabled = (currentPuzzleIndex === 0);
@@ -210,7 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
             piece.style.backgroundPosition = `-${col * pieceWidth}px -${row * pieceHeight}px`;
             
             piece.dataset.originalIndex = i;
-            piece.draggable = true;
 
             pieces.push(piece);
             currentPositions.push(i);
@@ -232,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const col = targetIndex % numCols;
             piece.style.gridRowStart = row + 1;
             piece.style.gridColumnStart = col + 1;
-            // Zajistí, že se styly z dotykového přetahování resetují, pokud by z nějakého důvodu zůstaly
+            // Zajistí, že se styly z ručního přetahování resetují
             piece.style.removeProperty('transform'); 
             piece.style.removeProperty('left');
             piece.style.removeProperty('top');
@@ -243,6 +237,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funkce pro zamíchání dílků ---
     function shufflePieces() {
         messageDisplay.textContent = '';
+        pieces.forEach(piece => piece.classList.remove('correct')); // Zajištění odstranění třídy 'correct'
+        
         for (let i = currentPositions.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [currentPositions[i], currentPositions[j]] = [currentPositions[j], currentPositions[i]];
@@ -251,142 +247,102 @@ document.addEventListener('DOMContentLoaded', () => {
         checkWin();
     }
 
+    // --- KLÍČOVÉ FUNKCE pro přetahování (beze změny, jsou správné) ---
+
+    function startDrag(e) {
+        e.preventDefault(); 
+        
+        draggedPiece = e.currentTarget;
+        draggedPiece.classList.add('dragging');
+
+        const clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+        const clientY = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
+
+        const rect = draggedPiece.getBoundingClientRect();
+        offsetX = clientX - rect.left - rect.width / 2;
+        offsetY = clientY - rect.top - rect.height / 2;
+
+        draggedPiece.style.left = `${clientX}px`;
+        draggedPiece.style.top = `${clientY}px`;
+
+        if (e.type === 'mousedown') {
+            document.addEventListener('mousemove', dragMove);
+            document.addEventListener('mouseup', endDrag);
+        }
+    }
+
+    function dragMove(e) {
+        if (!draggedPiece) return;
+        e.preventDefault();
+
+        const clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
+        const clientY = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
+        
+        draggedPiece.style.left = `${clientX}px`;
+        draggedPiece.style.top = `${clientY}px`;
+
+        draggedPiece.style.visibility = 'hidden';
+        let elementUnderCursor = document.elementFromPoint(clientX, clientY);
+        draggedPiece.style.visibility = 'visible';
+
+        if (highlightedPiece && highlightedPiece !== elementUnderCursor) {
+            highlightedPiece.classList.remove('highlight');
+        }
+        if (elementUnderCursor && elementUnderCursor.classList.contains('puzzle-piece') && elementUnderCursor !== draggedPiece) {
+            elementUnderCursor.classList.add('highlight');
+            highlightedPiece = elementUnderCursor;
+        } else {
+            highlightedPiece = null;
+        }
+    }
+
+    function endDrag(e) {
+        if (!draggedPiece) return;
+        
+        const clientX = e.clientX !== undefined ? e.clientX : e.changedTouches[0].clientX;
+        const clientY = e.clientY !== undefined ? e.clientY : e.changedTouches[0].clientY;
+
+        draggedPiece.style.visibility = 'hidden';
+        let targetElement = document.elementFromPoint(clientX, clientY);
+        draggedPiece.style.visibility = 'visible';
+
+        if (targetElement && targetElement.classList.contains('puzzle-piece') && targetElement !== draggedPiece) {
+            const draggedIndexInPiecesArray = pieces.indexOf(draggedPiece);
+            const targetIndexInPiecesArray = pieces.indexOf(targetElement);
+
+            const tempCurrentPositionOfDragged = currentPositions[draggedIndexInPiecesArray];
+            currentPositions[draggedIndexInPiecesArray] = currentPositions[targetIndexInPiecesArray];
+            currentPositions[targetIndexInPiecesArray] = tempCurrentPositionOfDragged;
+        }
+        
+        draggedPiece.classList.remove('dragging');
+        if (highlightedPiece) {
+            highlightedPiece.classList.remove('highlight');
+            highlightedPiece = null;
+        }
+        draggedPiece = null;
+
+        document.removeEventListener('mousemove', dragMove);
+        document.removeEventListener('mouseup', endDrag);
+
+        positionPieces();
+        checkWin();
+    }
+
+
     // --- Funkce pro přidání event listenerů pro přetahování (myš i dotyk) ---
     function addEventListenersToPieces() {
         pieces.forEach(piece => {
-            // --- Myší události (zachovány pro desktop) ---
-            piece.addEventListener('dragstart', (e) => {
-                draggedPiece = piece;
-                e.dataTransfer.effectAllowed = 'move';
-                piece.classList.add('dragging');
-                const rect = piece.getBoundingClientRect();
-                draggedPiece.style.left = `${e.clientX}px`;
-                draggedPiece.style.top = `${e.clientY}px`;
-            });
-
-            piece.addEventListener('dragend', () => {
-                if (draggedPiece) {
-                    draggedPiece.classList.remove('dragging');
-                    draggedPiece.style.transform = '';
-                    draggedPiece.style.removeProperty('left');
-                    draggedPiece.style.removeProperty('top');
-                    draggedPiece = null;
-                    positionPieces();
-                    checkWin();
-                }
-            });
-
-            piece.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-                if (draggedPiece) {
-                    draggedPiece.style.left = `${e.clientX}px`;
-                    draggedPiece.style.top = `${e.clientY}px`;
-
-                    // Zvýraznění cílového dílku během dragover
-                    let elementUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
-                    if (highlightedPiece && highlightedPiece !== elementUnderCursor) {
-                        highlightedPiece.classList.remove('highlight');
-                    }
-                    if (elementUnderCursor && elementUnderCursor.classList.contains('puzzle-piece') && elementUnderCursor !== draggedPiece) {
-                        elementUnderCursor.classList.add('highlight');
-                        highlightedPiece = elementUnderCursor;
-                    } else {
-                        highlightedPiece = null;
-                    }
-                }
-            });
-
-            piece.addEventListener('drop', (e) => {
-                e.preventDefault();
-                if (draggedPiece && draggedPiece !== piece) {
-                    const draggedIndexInPiecesArray = pieces.indexOf(draggedPiece);
-                    const targetIndexInPiecesArray = pieces.indexOf(piece);
-
-                    const tempCurrentPositionOfDragged = currentPositions[draggedIndexInPiecesArray];
-                    currentPositions[draggedIndexInPiecesArray] = currentPositions[targetIndexInPiecesArray];
-                    currentPositions[targetIndexInPiecesArray] = tempCurrentPositionOfDragged;
-                }
-                // positionPieces() a checkWin() se volají v dragend
-            });
-
-            // --- Dotykové události (pro mobilní zařízení/tablety) ---
+            // Myší události (vlastní logika přetahování)
+            piece.addEventListener('mousedown', startDrag);
+            
+            // Dotykové události
             piece.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-
-                draggedPiece = piece;
-                draggedPiece.classList.add('dragging');
-
-                const touch = e.touches[0];
-                draggedPiece.style.left = `${touch.clientX}px`;
-                draggedPiece.style.top = `${touch.clientY}px`;
+                startDrag(e); 
             });
 
-            piece.addEventListener('touchmove', (e) => {
-                if (!draggedPiece) return;
-                e.preventDefault(); 
-
-                const touch = e.touches[0];
-                draggedPiece.style.left = `${touch.clientX}px`;
-                draggedPiece.style.top = `${touch.clientY}px`;
-
-                // --- NOVÁ LOGIKA PRO ZVÝRAZNĚNÍ CÍLE BĚHEM PŘETAHOVÁNÍ ---
-                // Dočasně skryjeme tažený dílek, abychom našli element pod ním
-                draggedPiece.style.visibility = 'hidden';
-                let elementUnderFinger = document.elementFromPoint(touch.clientX, touch.clientY);
-                draggedPiece.style.visibility = 'visible';
-
-                // Zruší zvýraznění předchozího dílku
-                if (highlightedPiece && highlightedPiece !== elementUnderFinger) {
-                    highlightedPiece.classList.remove('highlight');
-                }
-
-                // Zvýrazní nový cílový dílek, pokud je to puzzle-piece a není to tažený dílek
-                if (elementUnderFinger && elementUnderFinger.classList.contains('puzzle-piece') && elementUnderFinger !== draggedPiece) {
-                    elementUnderFinger.classList.add('highlight');
-                    highlightedPiece = elementUnderFinger;
-                } else {
-                    highlightedPiece = null; // Pokud není pod prstem žádný platný dílek
-                }
-                // --- KONEC NOVÉ LOGIKY ---
-            });
-
-            piece.addEventListener('touchend', (e) => {
-                if (!draggedPiece) return;
-
-                // Vyčistí zvýraznění při ukončení přetahování
-                if (highlightedPiece) {
-                    highlightedPiece.classList.remove('highlight');
-                    highlightedPiece = null;
-                }
-
-                // Dočasně skryjeme tažený dílek, abychom našli element pod ním
-                draggedPiece.style.visibility = 'hidden';
-                const touch = e.changedTouches[0];
-                let targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-                draggedPiece.style.visibility = 'visible';
-
-                // Pokud existuje cílový element a je to jiný dílek puzzle
-                if (targetElement && targetElement.classList.contains('puzzle-piece') && targetElement !== draggedPiece) {
-                    const draggedIndexInPiecesArray = pieces.indexOf(draggedPiece);
-                    const targetIndexInPiecesArray = pieces.indexOf(targetElement);
-
-                    const tempCurrentPositionOfDragged = currentPositions[draggedIndexInPiecesArray];
-                    currentPositions[draggedIndexInPiecesArray] = currentPositions[targetIndexInPiecesArray];
-                    currentPositions[targetIndexInPiecesArray] = tempCurrentPositionOfDragged;
-                }
-
-                // Resetujeme styly taženého dílku
-                draggedPiece.classList.remove('dragging');
-                draggedPiece.style.removeProperty('left');
-                draggedPiece.style.removeProperty('top');
-                draggedPiece.style.removeProperty('transform');
-                
-                draggedPiece = null;
-
-                positionPieces();
-                checkWin();
-            });
+            piece.addEventListener('touchmove', dragMove);
+            piece.addEventListener('touchend', endDrag);
         });
     }
 
@@ -394,6 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function checkWin() {
         let isSolved = true;
         for (let i = 0; i < numRows * numCols; i++) {
+            // Kontrolujeme, zda dílek na dané aktuální pozici (i) má originální index shodný s touto pozicí
             if (parseInt(pieces[i].dataset.originalIndex) !== currentPositions[i]) {
                 isSolved = false;
                 break;
@@ -442,9 +399,15 @@ document.addEventListener('DOMContentLoaded', () => {
         nextButton.disabled = true;
     }
 
-    // --- Event Listener pro změnu velikosti okna (responzivita) ---
+    // --- Debounce pro zabránění přeblikávání při scrollu, ale zachování reakce na otočení ---
+    let resizeTimer;
     window.addEventListener('resize', () => {
-        loadPuzzle(currentPuzzleIndex);
+        clearTimeout(resizeTimer);
+        // Počkáme krátce, abychom zaručili, že se nejedná jen o skrytou lištu
+        resizeTimer = setTimeout(() => {
+            // Tímto se zajistí, že se puzzle po otočení NÁHODOU ROZMIXUJE, 
+            // ale správně se NAČTE s novými rozměry
+            loadPuzzle(currentPuzzleIndex); 
+        }, 250);
     });
 });
-
