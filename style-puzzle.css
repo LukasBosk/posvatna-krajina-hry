@@ -94,6 +94,8 @@ button:disabled {
     border-radius: 5px;
     max-width: 90vw;
     overflow: hidden;
+    /* ZMĚNA 1: touch-action pro potlačení scrollu v oblasti puzzle */
+    touch-action: none;
 }
 
 .puzzle-piece {
@@ -104,7 +106,8 @@ button:disabled {
     position: relative;
     user-select: none;
     -webkit-user-drag: none;
-    touch-action: none;
+    /* ZMĚNA 2: Vracíme touch-action: none; (Proto implementujeme vlastní drag myší v JS) */
+    touch-action: none; 
 }
 
 .puzzle-piece.dragging {
@@ -113,7 +116,8 @@ button:disabled {
     z-index: 1000;
     position: absolute;
     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    transform: translate(-50%, -50%);
+    /* Přechod na transform: translate(X, Y) pro přesnější ruční drag*/
+    transform: translate(-50%, -50%); 
 }
 
 .puzzle-piece.highlight {
