@@ -1,426 +1,243 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const puzzleContainer = document.getElementById('puzzle-container');
-    const shuffleButton = document.getElementById('shuffle-button');
-    const prevButton = document.getElementById('prev-button');
+    const questionText = document.getElementById('question-text');
+    const quizImage = document.getElementById('quiz-image');
+    const answersContainer = document.getElementById('answers-container');
+    const feedbackMessage = document.getElementById('feedback');
     const nextButton = document.getElementById('next-button');
-    const puzzleInfo = document.getElementById('puzzle-info');
-    const messageDisplay = document.getElementById('message');
+    const quizScoreDisplay = document.getElementById('quiz-score');
+    const imageContainer = document.querySelector('.image-container'); // NOVINKA: Získáme referenci na image-container
 
-    const numRows = 3;
-    const numCols = 3;
-    
-    let dynamicTotalPuzzleWidth;
-    let dynamicTotalPuzzleHeight;
-    let currentImageNaturalWidth = 0;
-    let currentImageNaturalHeight = 0;
-    
-    let isSolved = false; // <<< NOVÁ PROMENNÁ PRO STAV ZÁMKU
-
-    const puzzleImages = [
-        'images/puzzle1.jpg',
-        'images/puzzle2.jpg',
-        'images/Borotin4R.jpg',
-        'images/Borotin4R2.jpg',
-        'images/puzzle3.jpg',
-        'images/puzzle4.jpg',
-        'images/puzzle5.jpg',
-        'images/Michov10R.jpg',
-        'images/Michov10R2.jpg',
-        'images/puzzle6.jpg',
-        'images/puzzle7.jpg',
-        'images/puzzle8.jpg',
-        'images/Vanovice4R.jpg',
-        'images/Vanovice4R2.jpg',
-        'images/puzzle9.jpg',
-        'images/puzzle10.jpg',
-        'images/osada3R.jpg', 
-        'images/osadaR.jpg',
-        'images/puzzle11.jpg',
-        'images/puzzle12.jpg',
-        'images/Vanovice6R.jpg',
-        'images/Vanovice6R2.jpg',
-        'images/puzzle13.jpg',
-        'images/puzzle14.jpg',
-        'images/puzzle15.jpg',
-        'images/puzzle16.jpg',
-        'images/VelkeOpatovice1R.jpg',
-        'images/VelkeOpatovice1R2.jpg',
-        'images/puzzle17.jpg',
-        'images/puzzle18.jpg',
-        'images/puzzle19.jpg',
-        'images/tkaniR.jpg',
-        'images/puzzle20.jpg',
-        'images/puzzle21.jpg',
-        'images/hrobR.jpg',
+    // Kvízové otázky
+    const quizQuestions = [
+        {
+            image: 'images/puzzle1.jpg',
+            question: 'Jaký artefakt je zobrazen na obrázku?',
+            options: [
+                'Bronzové dláto',
+                'Bronzová sekera'
+            ],
+            correctAnswer: 1 // Index 0 odpovídá první možnosti
+        },
+        {
+            image: 'images/puzzle2.jpg',
+            question: 'K čemu sloužil tento předmět?',
+            options: [
+                'Ke sklízení obilí',
+                'K porcování masa'
+            ],
+            correctAnswer: 0
+        },
+        {
+            image: 'images/puzzle11.jpg',
+            question: 'Odkud může pocházet surovina (jantar) použitá k výrobě tohoto předmtěu?',
+            options: [
+                'Z oblasti Středomoří',
+                'Z oblasti Baltu'
+            ],
+            correctAnswer: 1
+        },
+        {
+            image: 'images/puzzle3.jpg',
+            question: 'Jaký artefakt je zobrazen na obrázku?',
+            options: [
+                'Bronzová růžicová spona',
+                'Část bronzového opasku'
+            ],
+            correctAnswer: 0
+        },
+        {
+            image: 'images/puzzle10.jpg',
+            question: 'K čemu sloužil předmět na obrázku?',
+            options: [
+                'K odlévání bronzových předmětů',
+                'K broušení bronzových předmětů'
+            ],
+            correctAnswer: 0
+        },
+        {
+            // Další textová otázka
+            question: 'Jak se jinak říká hromadným nálezům/pokladům?',
+            options: [
+                'Despoty',
+                'Depoty',
+                'Deploty'
+            ],
+            correctAnswer: 1
+        },
+        {
+            // Další textová otázka
+            question: 'Do jakého období přibližně můžeme zařadit mladší a pozdní dobu bronzovou?',
+            options: [
+                '750 - 400 př. n. l.',
+                '2200 - 1300 př. n. l.',
+                '1300 - 750 př. n. l.'
+            ],
+            correctAnswer: 2
+        },
+        {
+            // Další textová otázka
+            question: 'Na co odkazuje slovo "popelnice" z pojmenování Kultura lužických popelnicových polí?',
+            options: [
+                'Odpadní jáma',
+                'Odpadní nádoba',
+                'Pohřební nádoba'
+            ],
+            correctAnswer: 2
+        },
+        {
+            image: 'images/puzzle4.jpg',
+            question: 'Jaký artefakt je zobrazen na obrázku?',
+            options: [
+                'Bronzová břitva',
+                'Bronzový závěsek'
+            ],
+            correctAnswer: 1
+        },
+        {
+            image: 'images/puzzle17.jpg',
+            question: 'Jaký artefakt je zobrazen na obrázku?',
+            options: [
+                'Rukojeť meče',
+                'Závěsek'
+            ],
+            correctAnswer: 0
+        },
+        {
+            image: 'images/puzzle19.jpg',
+            question: 'Jaký artefakt je zobrazen na obrázku?',
+            options: [
+                'Bronzové kopí',
+                'Bronzové dláto'
+            ],
+            correctAnswer: 1
+        },
+        {
+            // Další textová otázka
+            question: 'Co je to bronz?',
+            options: [
+                'Slitina mědi a zinku',
+                'Slitina mědi a niklu',
+                'Slitina mědi a cínu'
+            ],
+            correctAnswer: 2
+        },
+        {
+            // Další textová otázka
+            question: 'Jaký byl nejběžnější typ pohřbu během mladší a pozdní doby bronzové',
+            options: [
+                'Kostrový',
+                'Žárový'
+            ],
+            correctAnswer: 1
+        },
+        {
+            // Další textová otázka
+            question: 'Jakou archeologickou kulturu je možné zařadit do mladší doby bronzové?',
+            options: [
+                'Středodunajská mohylová kultura',
+                'Kultura lužických popelnicových polí',
+                'Laténská kultura'
+            ],
+            correctAnswer: 1
+        }
+        // Zde můžete přidat další otázky
     ];
 
-    const puzzleMessages = {
-        'images/puzzle1.jpg': 'Bronzová sekera s tulejí, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle2.jpg': 'Bronzový srp, doba bronzová - kultura lužických popelnicových polí',
-        'images/Borotin4R.jpg': 'Rekonstrukce vzhledu ženy s použitím artefaktů z depotu Borotín 4. Doba bronzová - kultura lužických popelnicových polí',
-        'images/Borotin4R2.jpg': 'Depot Borotín 4 - původně jej tvořily dva šperky: spona ukončená růžicemi a náhrdelník složený z osmi závěsků ve tvaru koleček, závěsku ve tvaru srpku, jednoduchého litého kroužku, trubiček a točeného drátu.',
-        'images/puzzle3.jpg': 'Bronzová růžicová spona, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle4.jpg': 'Bronzový lunicovitý závěsek s tulejkou, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle5.jpg': 'Bronzový závěsek, starší doba bronzová - věteřovská kultura',
-        'images/Michov10R.jpg': 'Rekonstrukce vzhledu ženy na základě luxusní ženské garnitury z depotu Míchov 10. Doba bronzová - kultura lužických popelnicových polí',
-        'images/Michov10R2.jpg': 'Depotový soubor Míchov 10 tvoří dva masivní spirálovité náramky ukončené růžicemi a dva křehké spirálovité nánožníky s růžicemi.',
-        'images/puzzle6.jpg': 'Bronzová sekera s laloky, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle7.jpg': 'Bronzové kopí s tulejkou, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle8.jpg': 'Svitek zlatého drátu, doba bronzová - kultura lužických popelnicových polí',
-        'images/Vanovice4R.jpg': 'Rekonstrukce párového nošení dlouhých jehlic u žen na základě depotu Vanovice 4. Doba bronzová - kultura lužických popelnicových polí',
-        'images/Vanovice4R2.jpg': 'Depot Vanovice 4 je tvořen pouze jedním typem šperku – dvěma páry identických jehlic, netypicky dlouhých a zdobených jemnou rytou výzdobou.',
-        'images/puzzle9.jpg': 'Bronzové udidlo, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle10.jpg': 'Licí formy, doba bronzová - kultura lužických popelnicových polí',
-        'images/osada3R.jpg': 'Rekonstrukce nadzemního domu kůlové konstrukce',
-        'images/osadaR.jpg': 'Rekonstrukce osady doby bronzové',
-        'images/puzzle11.jpg': 'Jantarový korálek, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle12.jpg': 'Bronzový závěsek, doba bronzová - kultura lužických popelnicových polí',
-        'images/Vanovice6R.jpg': 'Rekonstrukce nošení depotu Vanovice 6. Doba bronzová - kultura lužických popelnicových polí',
-        'images/Vanovice6R2.jpg': 'Depot Vanovice 6 obsahoval celkem šest kusů, z toho většinu představují šperky malých rozměrů, odpovídajících dětské velikosti: dva ozdobné kruhy (nákrčníky) a dva náramky. Depot dále obsahoval břitvu a drobnou hlavici jehlice s jemnou výzdobou',
-        'images/puzzle13.jpg': 'Bronzová štítová spona, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle14.jpg': 'Výzdobný motiv štítové spony, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle15.jpg': 'Bronzové kladívko, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle16.jpg': 'Bronzový spirálovitý nápažník, doba bronzová - kultura lužických popelnicových polí',
-        'images/VelkeOpatovice1R.jpg': 'Rekonstrukce mužské osobní výbavy na základě depotu Velké Opatovice 1. Doba bronzová - kultura lužických popelnicových polí',
-        'images/VelkeOpatovice1R2.jpg': 'Depot Velké Opatovice 1 byl složen z nástroje (sekery), zbraně (kopí s tulejí) a šperku sloužícího k sepnutí šatů (jehlice)',
-        'images/puzzle17.jpg': 'Rukojeť bronzového meče, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle18.jpg': 'Keramická nádoba, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle19.jpg': 'Bronzové dláto s tulejí, doba bronzová - kultura lužických popelnicových polí',
-        'images/tkaniR.jpg': 'Tkaní na jednoduchém tkalcovském stavu',
-        'images/puzzle20.jpg': 'Bronzový spirálovitý náramek, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle21.jpg': 'Bronzový náramek, doba bronzová - kultura lužických popelnicových polí',
-        'images/hrobR.jpg': 'Rekonstrukce pohřbu - typickým pohřbem kultury lužických popelnicových polí byl žárový pohřeb uložený v keramické nádobě.',
-    };
+    let shuffledQuestions = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
 
-    let currentPuzzleIndex = 0;
-    let pieces = [];
-    let currentPositions = [];
-    let originalPositions = [];
-
-    let draggedPiece = null;
-    let highlightedPiece = null; 
-
-    // --- Proměnné pro offset myši/dotyku ---
-    let offsetX = 0; 
-    let offsetY = 0;
-
-    // --- Funkce pro dimenzování (beze změny) ---
-    function calculatePuzzleDimensions(imageNaturalWidth, imageNaturalHeight) {
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        
-        const maxAllowedWidth = viewportWidth * 0.9; 
-        const maxHeightLimit = viewportHeight - 300; 
-
-        let targetWidth = maxAllowedWidth;
-        const imageAspectRatio = imageNaturalWidth / imageNaturalHeight;
-        
-        let targetHeight = targetWidth / imageAspectRatio;
-        
-        if (targetHeight > maxHeightLimit) {
-            targetHeight = maxHeightLimit;
-            targetWidth = targetHeight * imageAspectRatio;
-        }
-
-        targetWidth = Math.min(Math.max(targetWidth, 200), maxAllowedWidth);
-        targetHeight = Math.min(Math.max(targetHeight, 200), maxHeightLimit);
-
-        dynamicTotalPuzzleWidth = targetWidth;
-        dynamicTotalPuzzleHeight = targetHeight;
-
-        puzzleContainer.style.width = `${dynamicTotalPuzzleWidth}px`;
-        puzzleContainer.style.height = `${dynamicTotalPuzzleHeight}px`;
-
-        const pieceWidth = dynamicTotalPuzzleWidth / numCols;
-        const pieceHeight = dynamicTotalPuzzleHeight / numRows;
-
-        puzzleContainer.style.gridTemplateColumns = `repeat(${numCols}, ${pieceWidth}px)`;
-        puzzleContainer.style.gridTemplateRows = `repeat(${numRows}, ${pieceHeight}px)`;
-
-        puzzleContainer.style.setProperty('--puzzle-total-width', `${dynamicTotalPuzzleWidth}px`);
-        puzzleContainer.style.setProperty('--puzzle-total-height', `${dynamicTotalPuzzleHeight}px`);
-    }
-
-    // --- Funkce pro PŘEPÍSNUTÍ rozměrů dílků (beze změny) ---
-    function recalculateDimensions() {
-        if (currentImageNaturalWidth > 0 && currentImageNaturalHeight > 0) {
-            calculatePuzzleDimensions(currentImageNaturalWidth, currentImageNaturalHeight);
-            
-            const pieceWidth = dynamicTotalPuzzleWidth / numCols;
-            const pieceHeight = dynamicTotalPuzzleHeight / numRows;
-            
-            pieces.forEach((piece, i) => {
-                const row = Math.floor(i / numCols);
-                const col = i % numCols;
-
-                piece.style.width = `${pieceWidth}px`;
-                piece.style.height = `${pieceHeight}px`;
-                piece.style.backgroundSize = `${dynamicTotalPuzzleWidth}px ${dynamicTotalPuzzleHeight}px`;
-                piece.style.backgroundPosition = `-${col * pieceWidth}px -${row * pieceHeight}px`;
-            });
-
-            positionPieces(); 
+    // Funkce pro zamíchání otázek
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
         }
     }
 
-
-    // --- Funkce pro načtení a inicializaci puzzle (Nyní nastavuje isSolved = false) ---
-    function loadPuzzle(index) {
-        if (index < 0 || index >= puzzleImages.length) {
-            console.error('Neplatný index puzzle obrázku.');
+    // Funkce pro načtení a zobrazení otázky
+    function loadQuestion() {
+        if (currentQuestionIndex >= shuffledQuestions.length) {
+            displayFinalScore();
             return;
         }
 
-        currentPuzzleIndex = index;
-        const imageUrl = puzzleImages[currentPuzzleIndex];
-        puzzleInfo.textContent = `Puzzle ${currentPuzzleIndex + 1} / ${puzzleImages.length}`;
-        messageDisplay.textContent = '';
-        
-        pieces.forEach(piece => piece.classList.remove('correct'));
-        isSolved = false; // <<< NOVÉ: Reset stavu řešení
+        const currentQuestion = shuffledQuestions[currentQuestionIndex];
 
-        const img = new Image();
-        img.onload = () => {
-            currentImageNaturalWidth = img.naturalWidth;
-            currentImageNaturalHeight = img.naturalHeight;
-            
-            calculatePuzzleDimensions(currentImageNaturalWidth, currentImageNaturalHeight);
-            initializePuzzle(imageUrl);
+        questionText.textContent = currentQuestion.question;
+        feedbackMessage.textContent = '';
+        nextButton.classList.add('hidden');
 
-            prevButton.disabled = (currentPuzzleIndex === 0);
-            nextButton.disabled = (currentPuzzleIndex === puzzleImages.length - 1);
-            shuffleButton.disabled = false;
-        };
-        img.onerror = () => {
-            console.error(`Nepodařilo se načíst obrázek: ${imageUrl}`);
-            messageDisplay.textContent = 'Chyba při načítání obrázku.';
-            puzzleContainer.innerHTML = '';
-            prevButton.disabled = true;
-            nextButton.disabled = true;
-            shuffleButton.disabled = true;
-        };
-        img.src = imageUrl;
-    }
-
-    // --- Funkce pro inicializaci dílků puzzle (beze změny) ---
-    function initializePuzzle(imageDataUrl) {
-        puzzleContainer.innerHTML = '';
-        pieces = [];
-        currentPositions = [];
-        originalPositions = [];
-        
-        const pieceWidth = dynamicTotalPuzzleWidth / numCols;
-        const pieceHeight = dynamicTotalPuzzleHeight / numRows;
-
-        for (let i = 0; i < numRows * numCols; i++) {
-            const piece = document.createElement('div');
-            piece.classList.add('puzzle-piece');
-            
-            piece.style.width = `${pieceWidth}px`;
-            piece.style.height = `${pieceHeight}px`;
-            piece.style.backgroundImage = `url(${imageDataUrl})`;
-            
-            const row = Math.floor(i / numCols);
-            const col = i % numCols;
-            
-            piece.style.backgroundPosition = `-${col * pieceWidth}px -${row * pieceHeight}px`;
-            piece.style.backgroundSize = `${dynamicTotalPuzzleWidth}px ${dynamicTotalPuzzleHeight}px`;
-            
-            piece.dataset.originalIndex = i;
-
-            pieces.push(piece);
-            currentPositions.push(i);
-            originalPositions.push(i);
-
-            puzzleContainer.appendChild(piece);
+        // NOVINKA: Kontrola, zda otázka obsahuje obrázek
+        if (currentQuestion.image) {
+            quizImage.src = currentQuestion.image;
+            imageContainer.classList.remove('hidden'); // Zobrazit kontejner s obrázkem
+        } else {
+            imageContainer.classList.add('hidden'); // Skrýt kontejner s obrázkem
+            quizImage.src = ''; // Vyprázdnit src, aby se nic nenačítalo
         }
 
-        addEventListenersToPieces();
-        
-        currentPositions = [...originalPositions]; 
-        positionPieces(); 
 
-        // Po seřazení ho musíme zamíchat poprvé ručně (po každém načtení)
-        shufflePieces(); 
-    }
+        answersContainer.innerHTML = ''; // Vyčistí předchozí tlačítka
 
-    // --- Funkce pro umístění dílků v gridu (beze změny) ---
-    function positionPieces() {
-        pieces.forEach((piece, index) => {
-            const targetIndex = currentPositions[index];
-            const row = Math.floor(targetIndex / numCols);
-            const col = targetIndex % numCols;
-            piece.style.gridRowStart = row + 1;
-            piece.style.gridColumnStart = col + 1;
-            piece.style.removeProperty('transform'); 
-            piece.style.removeProperty('left');
-            piece.style.removeProperty('top');
-            piece.style.removeProperty('z-index');
+        currentQuestion.options.forEach((option, index) => {
+            const button = document.createElement('button');
+            button.textContent = option;
+            button.classList.add('answer-button');
+            button.addEventListener('click', () => checkAnswer(index, button));
+            answersContainer.appendChild(button);
         });
     }
 
-    // --- Funkce pro zamíchání dílků (Nyní nastavuje isSolved = false) ---
-    function shufflePieces() {
-        messageDisplay.textContent = '';
-        pieces.forEach(piece => piece.classList.remove('correct')); 
-        
-        for (let i = currentPositions.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [currentPositions[i], currentPositions[j]] = [currentPositions[j], currentPositions[i]];
-        }
-        positionPieces();
-        isSolved = false; // <<< NOVÉ: Puzzle je zamícháno, není složeno
-        checkWin();
-    }
+    // Funkce pro kontrolu odpovědi
+    function checkAnswer(selectedIndex, clickedButton) {
+        const currentQuestion = shuffledQuestions[currentQuestionIndex];
+        const allAnswerButtons = answersContainer.querySelectorAll('.answer-button');
 
-    // --- Funkce startDrag (Přidáno uzamčení) ---
-    function startDrag(e) {
-        // <<< KLÍČOVÁ ZMĚNA 1: Pokud je puzzle složeno, zastavit přetahování
-        if (isSolved) {
-            return; 
-        }
-
-        e.preventDefault(); 
-        draggedPiece = e.currentTarget; 
-        draggedPiece.classList.add('dragging');
-        const clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
-        const clientY = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
-        const rect = draggedPiece.getBoundingClientRect();
-        offsetX = clientX - rect.left - rect.width / 2;
-        offsetY = clientY - rect.top - rect.height / 2;
-        draggedPiece.style.left = `${clientX}px`;
-        draggedPiece.style.top = `${clientY}px`;
-        if (e.type === 'mousedown') {
-            document.addEventListener('mousemove', dragMove);
-            document.addEventListener('mouseup', endDrag);
-        }
-    }
-
-    // --- dragMove (beze změny) ---
-    function dragMove(e) {
-        if (!draggedPiece) return;
-        e.preventDefault();
-        const clientX = e.clientX !== undefined ? e.clientX : e.touches[0].clientX;
-        const clientY = e.clientY !== undefined ? e.clientY : e.touches[0].clientY;
-        draggedPiece.style.left = `${clientX}px`;
-        draggedPiece.style.top = `${clientY}px`;
-        draggedPiece.style.visibility = 'hidden';
-        let elementUnderCursor = document.elementFromPoint(clientX, clientY);
-        draggedPiece.style.visibility = 'visible';
-        if (highlightedPiece && highlightedPiece !== elementUnderCursor) {
-            highlightedPiece.classList.remove('highlight');
-        }
-        if (elementUnderCursor && elementUnderCursor.classList.contains('puzzle-piece') && elementUnderCursor !== draggedPiece) {
-            elementUnderCursor.classList.add('highlight');
-            highlightedPiece = elementUnderCursor;
-        } else {
-            highlightedPiece = null;
-        }
-    }
-
-    // --- endDrag (beze změny) ---
-    function endDrag(e) {
-        if (!draggedPiece) return;
-        const clientX = e.clientX !== undefined ? e.clientX : e.changedTouches[0].clientX;
-        const clientY = e.clientY !== undefined ? e.clientY : e.changedTouches[0].clientY;
-        draggedPiece.style.visibility = 'hidden';
-        let targetElement = document.elementFromPoint(clientX, clientY);
-        draggedPiece.style.visibility = 'visible';
-        if (targetElement && targetElement.classList.contains('puzzle-piece') && targetElement !== draggedPiece) {
-            const draggedIndexInPiecesArray = pieces.indexOf(draggedPiece);
-            const targetIndexInPiecesArray = pieces.indexOf(targetElement);
-            const tempCurrentPositionOfDragged = currentPositions[draggedIndexInPiecesArray];
-            currentPositions[draggedIndexInPiecesArray] = currentPositions[targetIndexInPiecesArray];
-            currentPositions[targetIndexInPiecesArray] = tempCurrentPositionOfDragged;
-        }
-        draggedPiece.classList.remove('dragging');
-        if (highlightedPiece) {
-            highlightedPiece.classList.remove('highlight');
-            highlightedPiece = null;
-        }
-        draggedPiece = null;
-        document.removeEventListener('mousemove', dragMove);
-        document.removeEventListener('mouseup', endDrag);
-        positionPieces();
-        checkWin();
-    }
-
-    // --- addEventListenersToPieces (beze změny) ---
-    function addEventListenersToPieces() {
-        pieces.forEach(piece => {
-            piece.addEventListener('mousedown', startDrag);
-            piece.addEventListener('touchstart', (e) => { startDrag(e); });
-            piece.addEventListener('touchmove', dragMove);
-            piece.addEventListener('touchend', endDrag);
+        // Zablokovat všechna tlačítka po odpovědi
+        allAnswerButtons.forEach(button => {
+            button.disabled = true;
         });
-    }
 
-    // --- Funkce pro kontrolu výhry (Nyní nastavuje isSolved = true) ---
-    function checkWin() {
-        let currentlySolved = true;
-        for (let i = 0; i < numRows * numCols; i++) {
-            if (parseInt(pieces[i].dataset.originalIndex) !== currentPositions[i]) {
-                currentlySolved = false;
-                break;
-            }
-        }
-        
-        isSolved = currentlySolved; // <<< KLÍČOVÁ ZMĚNA 2: Nastavení stavu
-
-        if (isSolved) {
-            const currentImageUrl = puzzleImages[currentPuzzleIndex];
-            messageDisplay.textContent = puzzleMessages[currentImageUrl] || 'Gratulujeme! Puzzle složeno!';
-            pieces.forEach(piece => piece.classList.add('correct'));
-            // Tlačítko Zamíchat zůstává odemčené (shuffleButton.disabled = false je default)
+        if (selectedIndex === currentQuestion.correctAnswer) {
+            score++;
+            clickedButton.classList.add('correct');
+            feedbackMessage.textContent = 'Správně!';
+            feedbackMessage.style.color = 'green';
         } else {
-            messageDisplay.textContent = '';
-            pieces.forEach(piece => piece.classList.remove('correct'));
-            if (pieces.length > 0) {
-                prevButton.disabled = (currentPuzzleIndex === 0);
-                nextButton.disabled = (currentPuzzleIndex === puzzleImages.length - 1);
-                shuffleButton.disabled = false;
-            }
+            clickedButton.classList.add('wrong');
+            feedbackMessage.textContent = 'Špatně. Správná odpověď byla: ' + currentQuestion.options[currentQuestion.correctAnswer];
+            feedbackMessage.style.color = 'red';
+            // Zvýraznění správné odpovědi, pokud byla vybrána špatná
+            allAnswerButtons[currentQuestion.correctAnswer].classList.add('correct');
         }
+
+        nextButton.classList.remove('hidden'); // Zobrazí tlačítko "Další otázka"
     }
 
-    // --- Event Listenery pro tlačítka navigace a míchání (beze změny) ---
-    prevButton.addEventListener('click', () => {
-        if (currentPuzzleIndex > 0) {
-            loadPuzzle(currentPuzzleIndex - 1);
-        }
-    });
+    // Funkce pro zobrazení finálního skóre
+    function displayFinalScore() {
+        questionText.textContent = 'Kvíz dokončen!';
+        imageContainer.classList.add('hidden'); // Skryje obrázek i jeho kontejner
+        answersContainer.innerHTML = ''; // Vyčistí tlačítka
+        feedbackMessage.textContent = '';
+        nextButton.classList.add('hidden');
+        quizScoreDisplay.classList.remove('hidden');
+        quizScoreDisplay.textContent = `Vaše skóre: ${score} z ${shuffledQuestions.length}`;
+    }
 
+    // Event listener pro tlačítko "Další otázka"
     nextButton.addEventListener('click', () => {
-        if (currentPuzzleIndex < puzzleImages.length - 1) {
-            loadPuzzle(currentPuzzleIndex + 1);
-        }
+        currentQuestionIndex++;
+        loadQuestion();
     });
 
-    shuffleButton.addEventListener('click', shufflePieces);
-
-    // --- Načtení prvního puzzle při načtení stránky ---
-    if (puzzleImages.length > 0) {
-        loadPuzzle(0);
-    } else {
-        messageDisplay.textContent = 'Nebyly nalezeny žádné puzzle obrázky. Zkontrolujte pole puzzleImages v script-puzzle.js.';
-        shuffleButton.disabled = true;
-        prevButton.disabled = true;
-        nextButton.disabled = true;
-    }
-
-    // --- Resize listener (beze změny) ---
-    let resizeTimer;
-    let currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
-
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimer);
-        const newOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
-        
-        if (newOrientation !== currentOrientation) {
-            currentOrientation = newOrientation;
-            resizeTimer = setTimeout(recalculateDimensions, 250);
-        } else {
-            resizeTimer = setTimeout(recalculateDimensions, 50);
-        }
-    });
+    // Inicializace kvízu při načtení stránky
+    shuffleArray(quizQuestions); // Zamícháme otázky
+    shuffledQuestions = quizQuestions; // Uložíme zamíchané otázky
+    loadQuestion(); // Načteme první otázku
 });
+
+
+
+
