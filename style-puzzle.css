@@ -1,3 +1,4 @@
+/* style-puzzle.css */
 :root {
     /* Tuto hodnotu přepíše JavaScript pro stabilní výšku viewportu (vh) */
     --vh: 1vh; 
@@ -7,46 +8,49 @@
 body {
     font-family: 'Inter', sans-serif;
     margin: 0;
-    padding: 0; /* Odebrání paddingu z body */
-    
-    /* KLÍČOVÁ ZMĚNA 1: Fixace a velikost na 100% stabilní výšky/šířky */
-    width: 100vw;
-    height: calc(var(--vh, 1vh) * 100); /* Používá stabilní JS výšku */
-    position: fixed; /* Zabraňuje posunu stránky/pozadí */
-    top: 0;
-    left: 0;
-    overflow: hidden; /* Důležité, aby se zabránilo zobrazení scrollbarů a posunu */
-    
+    padding: 20px; /* Horní a spodní padding (20px + 20px) bude odečten v JS */
     background-image: url('./pozadi.jpg');
     background-size: cover;
-    background-attachment: fixed; 
+    background-attachment: fixed;
     background-position: center center;
     color: #333;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-start; /* Posune obsah nahoru */
+    /* min-height používá stabilní jednotku pro fix na mobilu a scroll na PC */
+    min-height: calc(var(--vh, 1vh) * 100); 
     box-sizing: border-box;
+    overflow-y: auto; /* Povolí scroll na PC, pokud se puzzle nezmenší dostatečně */
+    position: relative;
 }
 
-/* Kontejner pro obsah, aby mohl skrolovat v případě potřeby, i když body je fixní */
-.content-wrapper {
-    width: 100%;
-    max-width: 100vw;
-    height: 100%;
-    overflow-y: auto; /* Povolí skrolování jen uvnitř wrapperu */
+/* Styly pro hlavičku */
+.header {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    box-sizing: border-box;
-    padding-top: 10px; /* Přidán horní padding sem */
-    padding-bottom: 20px; /* Přidán spodní padding sem */
+    justify-content: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    text-align: center;
+    padding-top: 20px;
+    flex-shrink: 0; /* KLÍČOVÁ ZMĚNA 1: Pevná výška pro JS kalkulaci */
 }
-
+.header img {
+    height: 60px;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+.header h1 {
+    color: white;
+    font-size: 1.25em;
+    margin: 0;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    text-align: center;
+}
 
 /* Stávající styly tlačítek a ovládacích prvků */
 .navigation-controls, .game-controls {
-    margin-top: 10px;
+    margin-top: 20px;
     margin-bottom: 20px;
     display: flex;
     gap: 10px;
@@ -57,7 +61,7 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     flex-wrap: wrap;
     justify-content: center;
-    flex-shrink: 0; /* Zabrání zmenšování prvků */
+    flex-shrink: 0; /* KLÍČOVÁ ZMĚNA 1: Pevná výška pro JS kalkulaci */
 }
 
 button {
@@ -102,7 +106,7 @@ button:disabled {
     overflow: hidden;
     touch-action: none;
     flex-shrink: 0; /* Zabrání zmenšování puzzle */
-    max-height: 80vh; /* Mějte to jako pojistku pro případ, že JS selže */
+    /* max-height: 80vh - Ponecháme JS, aby počítal maximální velikost */
 }
 
 .puzzle-piece {
@@ -144,11 +148,11 @@ button:disabled {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     text-align: center;
-    flex-shrink: 0;
+    flex-shrink: 0; /* KLÍČOVÁ ZMĚNA 1: Pevná výška pro JS kalkulaci */
 }
 
 .back-button {
-    position: fixed; /* Měním na fixed, aby bylo vždy vidět i při scrollu wrapperu */
+    position: absolute;
     bottom: 20px;
     right: 20px;
     display: inline-block;
@@ -164,24 +168,24 @@ button:disabled {
     border-style: solid;
     border-color: rgba(255, 255, 255, 0.5) !important;
     font-weight: bold;
-    z-index: 100;
 }
 
 .back-button:hover {
     background-color: rgba(255, 255, 255, 0.8);
 }
 
-/* Responzivní úpravy pro menší obrazovky */
+/* Responzivní úpravy pro menší obrazovky (zde by se odečetlo 20px padding) */
 @media (max-width: 600px) {
-    .content-wrapper {
-        padding-top: 5px; 
+    body {
+        padding: 10px; /* Změna paddingu na 10px */
     }
-
+    
     .navigation-controls, .game-controls {
         flex-direction: column;
         padding: 10px;
         gap: 5px;
         margin-top: 5px; 
+        margin-bottom: 5px;
     }
 
     button {
