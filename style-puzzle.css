@@ -175,16 +175,18 @@ button:hover:not(:disabled) {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     text-align: center;
     margin-top: 20px;
-    margin-bottom: 80 px;
+    margin-bottom: 100px;
     max-width: 80%;
     flex-shrink: 0;
 }
 
 .back-button {
     /* Používáme fixed, aby tlačítko neovlivňovalo výpočet dostupné výšky */
-    position: absolute;
-    bottom: 20px;
-    right: 20px;
+    position: static;
+    bottom: auto;
+    right: auto;
+    align-self: flex-end;
+    display: block;
     border-width: 2px;
     border-style: solid;
     border-color: rgba(255, 255, 255, 0.5) !important;
