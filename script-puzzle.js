@@ -49,8 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'images/Vanovice4R.jpg',
         'images/Vanovice4R2.jpg',
         'images/puzzle9.jpg',
-        'images/puzzle10.jpg',
-        'images/ Licí formy.jpg', 
+        'images/puzzle10.jpg', 
         'images/osada3R.jpg',
         'images/osadaR.jpg',
         'images/puzzle11.jpg',
@@ -545,3 +544,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
