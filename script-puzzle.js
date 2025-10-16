@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'images/puzzle19.jpg',
         'images/tkaniR.jpg',
         'images/puzzle20.jpg',
-        'images/puzzle21.jpg'
+        'images/puzzle21.jpg',
         'images/hrobR.jpg',
     ];
 
@@ -84,8 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'images/puzzle19.jpg': 'Bronzové dláto s tulejí, doba bronzová - kultura lužických popelnicových polí',
         'images/tkaniR.jpg': 'Tkaní na jednoduchém tkalcovském stavu',
         'images/puzzle20.jpg': 'Bronzový spirálovitý náramek, doba bronzová - kultura lužických popelnicových polí',
-        'images/puzzle21.jpg': 'Bronzový náramek, doba bronzová - kultura lužických popelnicových polí'
-        'images/hrobR.jpg': 'Rekonstrukce pohřbu - typickým pohřbem kultury lužických popelnicových polí byl žárový pohřeb uložený v keramické nádobě.'
+        'images/puzzle21.jpg': 'Bronzový náramek, doba bronzová - kultura lužických popelnicových polí',
+        'images/hrobR.jpg': 'Rekonstrukce pohřbu - typickým pohřbem kultury lužických popelnicových polí byl žárový pohřeb uložený v keramické nádobě.',
     };
 
     let currentPuzzleIndex = 0;
@@ -447,4 +447,5 @@ document.addEventListener('DOMContentLoaded', () => {
         loadPuzzle(currentPuzzleIndex);
     });
 });
+
 
