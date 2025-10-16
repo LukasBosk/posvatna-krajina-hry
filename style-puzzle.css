@@ -1,3 +1,10 @@
+:root {
+    /* KLÍČOVÁ ZMĚNA 1: PŘIDÁNÍ PRO STABILIZACI VÝŠKY NA MOBILECH */
+    /* Tato hodnota se přepíše JavaScriptem, ale je nutná pro CSS */
+    --vh: 1vh; 
+}
+
+
 body {
     font-family: 'Inter', sans-serif;
     margin: 0;
@@ -10,7 +17,8 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-height: 100vh;
+    /* Důležité: min-height musí používat stabilní jednotku pro fix */
+    min-height: calc(var(--vh, 1vh) * 100); 
     box-sizing: border-box;
     overflow-y: auto;
     position: relative;
@@ -92,21 +100,20 @@ button:disabled {
     position: relative;
     padding: 5px;
     border-radius: 5px;
-    max-width: 90vw;
+    max-width: 95vw; /* Více místa na šířku */
     overflow: hidden;
-    /* ZMĚNA 1: touch-action pro potlačení scrollu v oblasti puzzle */
+    /* touch-action pro potlačení scrollu v oblasti puzzle */
     touch-action: none;
 }
 
 .puzzle-piece {
     background-size: var(--puzzle-total-width) var(--puzzle-total-height);
     cursor: grab;
-    border: 1px solid #eee; /* Původní jemný rámeček */
+    border: 1px solid #eee; 
     box-sizing: border-box;
     position: relative;
     user-select: none;
     -webkit-user-drag: none;
-    /* ZMĚNA 2: Vracíme touch-action: none; (Proto implementujeme vlastní drag myší v JS) */
     touch-action: none; 
 }
 
@@ -125,9 +132,9 @@ button:disabled {
     box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
 }
 
-/* ZMĚNA ZDE: Úplné odstranění rámečku po dokončení */
+/* Úplné odstranění rámečku po dokončení */
 .puzzle-piece.correct {
-    border: none; /* Odstraní jakýkoli rámeček, aby zůstal čistý obrázek */
+    border: none;
 }
 
 #message {
