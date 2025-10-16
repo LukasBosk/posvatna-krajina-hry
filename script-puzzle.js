@@ -94,9 +94,11 @@ document.addEventListener('DOMContentLoaded', () => {
     let originalPositions = [];
 
     let draggedPiece = null;
-    let highlightedPiece = null; // NOVÁ PROMĚNNÁ pro sledování zvýrazněného dílku
-    let dragOffsetX = 0; // NOVÁ PROMĚNNÁ pro ruční tažení myší (offset kliknutí od L H rohu)
-    let dragOffsetY = 0; // NOVÁ PROMĚNNÁ pro ruční tažení myší (offset kliknutí od L H rohu)
+    let highlightedPiece = null; 
+    
+    // Globální proměnné pro touch události, nutné pro korekci offsetu na mobilu
+    let dragOffsetX = 0;
+    let dragOffsetY = 0;
 
     // --- Funkce pro výpočet rozměrů puzzle na základě velikosti okna a rozměrů obrázku ---
     function calculatePuzzleDimensions(imageNaturalWidth, imageNaturalHeight) {
@@ -212,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             piece.style.backgroundPosition = `-${col * pieceWidth}px -${row * pieceHeight}px`;
             
             piece.dataset.originalIndex = i;
-            // piece.draggable = true; // Používáme vlastní mousedown/move/up, draggable není potřeba
+            piece.draggable = true; // Povolení nativního D&D pro PC
 
             pieces.push(piece);
             currentPositions.push(i);
@@ -234,12 +236,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const col = targetIndex % numCols;
             piece.style.gridRowStart = row + 1;
             piece.style.gridColumnStart = col + 1;
-            // Zajistí, že se styly z tažení resetují, pokud by z nějakého důvodu zůstaly
-            piece.style.removeProperty('transform'); 
+            
+            // Reset stylů po D&D pro zajištění návratu do gridu
             piece.style.removeProperty('left');
             piece.style.removeProperty('top');
+            piece.style.removeProperty('position');
             piece.style.removeProperty('z-index');
-            piece.style.removeProperty('position'); // Důležité: Reset pozice na relativní (zpět do gridu)
         });
     }
 
@@ -257,43 +259,86 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Funkce pro přidání event listenerů pro přetahování (myš i dotyk) ---
     function addEventListenersToPieces() {
         pieces.forEach(piece => {
-            // --- Myší události (vlastní logika mousedown/move/up pro spolehlivé přetahování na PC) ---
-            piece.addEventListener('mousedown', (e) => {
-                // Toto zajišťuje, že se událost spustí kdekoli na dílku
-                e.preventDefault(); 
-                
+            
+            // --- NATIVNÍ DRAG & DROP UDÁLOSTI (pro PC) ---
+            
+            piece.addEventListener('dragstart', (e) => {
                 draggedPiece = piece;
-                draggedPiece.classList.add('dragging');
-                draggedPiece.style.cursor = 'grabbing'; // Změna kurzoru
+                e.dataTransfer.effectAllowed = 'move';
+                piece.classList.add('dragging');
 
-                // Vypočítáme offset pro plynulé tažení (vzdálenost od kliknutí k L H rohu dílku)
+                // --- ZDE JE OPRAVA CHYCENÍ DÍLKU KDYKOLI (Hotspot Fix) ---
+                // Vypočítá offset kliknutí vůči L H rohu dílku a použije ho pro setDragImage
                 const rect = piece.getBoundingClientRect();
-                dragOffsetX = e.clientX - rect.left;
-                dragOffsetY = e.clientY - rect.top;
+                const offsetX = e.clientX - rect.left;
+                const offsetY = e.clientY - rect.top;
+                e.dataTransfer.setDragImage(piece, offsetX, offsetY);
+            });
 
-                // Nastavíme pozici a z-index pro tažení mimo grid
-                draggedPiece.style.position = 'absolute';
-                draggedPiece.style.zIndex = '1000';
-                
-                // Nastavíme počáteční pozici (s offsetem)
-                draggedPiece.style.left = `${e.clientX - dragOffsetX}px`;
-                draggedPiece.style.top = `${e.clientY - dragOffsetY}px`;
+            piece.addEventListener('dragend', () => {
+                draggedPiece.classList.remove('dragging');
+                draggedPiece = null;
+                if (highlightedPiece) {
+                    highlightedPiece.classList.remove('highlight');
+                    highlightedPiece = null;
+                }
             });
             
-            // Původní native Drag & Drop události (dragstart, dragend, dragover, drop) byly odstraněny/nahrazeny.
-
-            // --- Dotykové události (pro mobilní zařízení/tablety) ---
-            piece.addEventListener('touchstart', (e) => {
+            piece.addEventListener('dragover', (e) => {
                 e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                if (draggedPiece) {
+                    // Logika pro zvýraznění cíle pod kurzorem
+                    let elementUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
+                    
+                    if (highlightedPiece && highlightedPiece !== elementUnderCursor) {
+                        highlightedPiece.classList.remove('highlight');
+                    }
+                    if (elementUnderCursor && elementUnderCursor.classList.contains('puzzle-piece') && elementUnderCursor !== draggedPiece) {
+                        elementUnderCursor.classList.add('highlight');
+                        highlightedPiece = elementUnderCursor;
+                    } else {
+                        highlightedPiece = null;
+                    }
+                }
+            });
 
+            piece.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (highlightedPiece) {
+                    highlightedPiece.classList.remove('highlight');
+                }
+
+                let targetElement = e.target;
+                if (targetElement.classList.contains('puzzle-piece') && targetElement !== draggedPiece) {
+                    const draggedIndexInPiecesArray = pieces.indexOf(draggedPiece);
+                    const targetIndexInPiecesArray = pieces.indexOf(targetElement);
+
+                    // Výměna pozic
+                    const tempCurrentPositionOfDragged = currentPositions[draggedIndexInPiecesArray];
+                    currentPositions[draggedIndexInPiecesArray] = currentPositions[targetIndexInPiecesArray];
+                    currentPositions[targetIndexInPiecesArray] = tempCurrentPositionOfDragged;
+                }
+
+                positionPieces();
+                checkWin();
+            });
+
+            // --- DOTYKOVÉ UDÁLOSTI (Touch) ---
+            // Tyto události používají ruční pozicování a touch-action: none v CSS je chrání
+            
+            piece.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // Zabrání výchozí akci (scrollování/zoom)
+                
                 draggedPiece = piece;
                 draggedPiece.classList.add('dragging');
-                draggedPiece.style.position = 'absolute'; // Přidáno pro konzistenci
-                draggedPiece.style.zIndex = '1000'; // Přidáno pro konzistenci
+                draggedPiece.style.position = 'absolute'; 
+                draggedPiece.style.zIndex = '1000'; 
 
                 const touch = e.touches[0];
                 
-                // Vypočítáme offset i pro dotykové tažení, abychom zamezili "skoku"
+                // Vypočítáme offset pro plynulé tažení
                 const rect = piece.getBoundingClientRect();
                 dragOffsetX = touch.clientX - rect.left;
                 dragOffsetY = touch.clientY - rect.top;
@@ -310,43 +355,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 draggedPiece.style.left = `${touch.clientX - dragOffsetX}px`;
                 draggedPiece.style.top = `${touch.clientY - dragOffsetY}px`;
 
-                // --- NOVÁ LOGIKA PRO ZVÝRAZNĚNÍ CÍLE BĚHEM PŘETAHOVÁNÍ ---
-                // Dočasně skryjeme tažený dílek, abychom našli element pod ním
+                // Logika pro zvýraznění cíle
                 draggedPiece.style.visibility = 'hidden';
                 let elementUnderFinger = document.elementFromPoint(touch.clientX, touch.clientY);
                 draggedPiece.style.visibility = 'visible';
 
-                // Zruší zvýraznění předchozího dílku
                 if (highlightedPiece && highlightedPiece !== elementUnderFinger) {
                     highlightedPiece.classList.remove('highlight');
                 }
 
-                // Zvýrazní nový cílový dílek, pokud je to puzzle-piece a není to tažený dílek
                 if (elementUnderFinger && elementUnderFinger.classList.contains('puzzle-piece') && elementUnderFinger !== draggedPiece) {
                     elementUnderFinger.classList.add('highlight');
                     highlightedPiece = elementUnderFinger;
                 } else {
-                    highlightedPiece = null; // Pokud není pod prstem žádný platný dílek
+                    highlightedPiece = null;
                 }
-                // --- KONEC NOVÉ LOGIKY ---
             });
 
             piece.addEventListener('touchend', (e) => {
                 if (!draggedPiece) return;
 
-                // Vyčistí zvýraznění při ukončení přetahování
                 if (highlightedPiece) {
                     highlightedPiece.classList.remove('highlight');
                     highlightedPiece = null;
                 }
 
-                // Dočasně skryjeme tažený dílek, abychom našli element pod ním
                 draggedPiece.style.visibility = 'hidden';
                 const touch = e.changedTouches[0];
                 let targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
                 draggedPiece.style.visibility = 'visible';
 
-                // Pokud existuje cílový element a je to jiný dílek puzzle
                 if (targetElement && targetElement.classList.contains('puzzle-piece') && targetElement !== draggedPiece) {
                     const draggedIndexInPiecesArray = pieces.indexOf(draggedPiece);
                     const targetIndexInPiecesArray = pieces.indexOf(targetElement);
@@ -360,7 +398,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 draggedPiece.classList.remove('dragging');
                 draggedPiece.style.removeProperty('left');
                 draggedPiece.style.removeProperty('top');
-                draggedPiece.style.removeProperty('transform');
                 draggedPiece.style.removeProperty('position');
                 draggedPiece.style.removeProperty('z-index');
                 
@@ -413,69 +450,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Event Listener pro tlačítko "Zamíchat" ---
     shuffleButton.addEventListener('click', shufflePieces);
-    
-    // --- Globální posluchač pro ruční tažení myší (pohyb) ---
-    document.addEventListener('mousemove', (e) => {
-        if (!draggedPiece) return;
-        e.preventDefault(); 
-        
-        // Nastavíme pozici taženého dílku s korekcí offsetu kliknutí
-        draggedPiece.style.left = `${e.clientX - dragOffsetX}px`;
-        draggedPiece.style.top = `${e.clientY - dragOffsetY}px`;
 
-        // Logika zvýraznění cíle
-        draggedPiece.style.visibility = 'hidden';
-        let elementUnderCursor = document.elementFromPoint(e.clientX, e.clientY);
-        draggedPiece.style.visibility = 'visible';
-        
-        if (highlightedPiece && highlightedPiece !== elementUnderCursor) {
-            highlightedPiece.classList.remove('highlight');
-        }
-        if (elementUnderCursor && elementUnderCursor.classList.contains('puzzle-piece') && elementUnderCursor !== draggedPiece) {
-            elementUnderCursor.classList.add('highlight');
-            highlightedPiece = elementUnderCursor;
-        } else {
-            highlightedPiece = null;
-        }
-    });
-
-    // --- Globální posluchač pro ruční tažení myší (opuštění) ---
-    document.addEventListener('mouseup', (e) => {
-        if (!draggedPiece) return;
-        
-        // Vyčistí zvýraznění
-        if (highlightedPiece) {
-            highlightedPiece.classList.remove('highlight');
-        }
-
-        // Zjistí cílový dílek při upuštění
-        draggedPiece.style.visibility = 'hidden';
-        let targetElement = document.elementFromPoint(e.clientX, e.clientY);
-        draggedPiece.style.visibility = 'visible';
-
-        // Pokud existuje cílový element a je to jiný dílek puzzle
-        if (targetElement && targetElement.classList.contains('puzzle-piece') && targetElement !== draggedPiece) {
-            const draggedIndexInPiecesArray = pieces.indexOf(draggedPiece);
-            const targetIndexInPiecesArray = pieces.indexOf(targetElement);
-
-            // Výměna pozic
-            const tempCurrentPositionOfDragged = currentPositions[draggedIndexInPiecesArray];
-            currentPositions[draggedIndexInPiecesArray] = currentPositions[targetIndexInPiecesArray];
-            currentPositions[targetIndexInPiecesArray] = tempCurrentPositionOfDragged;
-        }
-        
-        // Reset a úklid
-        draggedPiece.classList.remove('dragging');
-        draggedPiece.style.cursor = 'grab'; // Reset kurzoru
-        draggedPiece.style.removeProperty('left');
-        draggedPiece.style.removeProperty('top');
-        draggedPiece.style.removeProperty('transform');
-        draggedPiece.style.removeProperty('position'); 
-        draggedPiece.style.removeProperty('z-index');
-        draggedPiece = null;
-
-        positionPieces();
-        checkWin();
+    // --- Event Listener pro změnu velikosti okna (responzivita) ---
+    window.addEventListener('resize', () => {
+        loadPuzzle(currentPuzzleIndex);
     });
 
     // --- Načtení prvního puzzle při načtení stránky ---
@@ -487,9 +465,4 @@ document.addEventListener('DOMContentLoaded', () => {
         prevButton.disabled = true;
         nextButton.disabled = true;
     }
-
-    // --- Event Listener pro změnu velikosti okna (responzivita) ---
-    window.addEventListener('resize', () => {
-        loadPuzzle(currentPuzzleIndex);
-    });
 });
