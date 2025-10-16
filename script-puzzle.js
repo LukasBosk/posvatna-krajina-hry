@@ -126,10 +126,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Používáme ŠÍŘKU okna
         const viewportWidth = window.innerWidth;
 
-        // Definuje prostor pro ovládací prvky, hlavičku a padding (cca 85% vertikálního prostoru)
-        const verticalPaddingRatio = 0.85; 
+        // Definuje prostor pro ovládací prvky a padding. ZMĚNA: Zvýšení poměru po odstranění headeru.
+        const verticalPaddingRatio = 0.95; 
         const maxAllowedWidth = viewportWidth * 0.95; // 95% šířky okna
-        const maxHeightLimit = stableViewportHeight * verticalPaddingRatio; 
+        const maxHeightLimit = stableViewportHeight * verticalPaddingRatio; // Toto je klíčový stabilní vertikální limit
 
         const imageAspectRatio = imageNaturalWidth / imageNaturalHeight;
         
@@ -441,7 +441,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Delší zpoždění pro skutečnou změnu orientace
             resizeTimer = setTimeout(recalculateDimensions, 250);
         } else {
-            // Rychlejší zpoždění pro skrytí/zobrazení lišty (které je nyní stabilizované díky --vh)
+            // Rychlejší zpoždění
             resizeTimer = setTimeout(recalculateDimensions, 50);
         }
     });
