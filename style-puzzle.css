@@ -175,13 +175,14 @@ button:hover:not(:disabled) {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     text-align: center;
     margin-top: 20px;
+    margin-bottom: 80 px;
     max-width: 80%;
     flex-shrink: 0;
 }
 
 .back-button {
     /* Používáme fixed, aby tlačítko neovlivňovalo výpočet dostupné výšky */
-    position: fixed;
+    position: absolute;
     bottom: 20px;
     right: 20px;
     border-width: 2px;
