@@ -66,6 +66,16 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         {
             // Další textová otázka
+            question: 'Jakou z těchto plodin u nás lidé v době bronzové pěstovali?',
+            options: [
+                'Kukuřice',
+                'Pšenice',
+                'Brambory'
+            ],
+            correctAnswer: 1
+        },
+        {
+            // Další textová otázka
             question: 'Do jakého období přibližně můžeme zařadit mladší a pozdní dobu bronzovou?',
             options: [
                 '750 - 400 př. n. l.',
@@ -237,6 +247,7 @@ document.addEventListener('DOMContentLoaded', () => {
     shuffledQuestions = quizQuestions; // Uložíme zamíchané otázky
     loadQuestion(); // Načteme první otázku
 });
+
 
 
 
