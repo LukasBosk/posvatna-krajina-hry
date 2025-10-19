@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'images/puzzle9.jpg',
         'images/puzzle10.jpg', 
         'images/osada3R.jpg',
-        'images/osadaR.jpg',
+        'images/OsadaR.jpg',
         'images/puzzle11.jpg',
         'images/puzzle12.jpg',
         'images/Vanovice6R.jpg',
@@ -544,5 +544,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
 
 
