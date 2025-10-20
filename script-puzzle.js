@@ -89,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'images/puzzle9.jpg': 'Bronzové udidlo, doba bronzová - kultura lužických popelnicových polí (cca 1300-750 př.n.l.)',
         'images/puzzle10.jpg': 'Licí formy, doba bronzová - kultura lužických popelnicových polí (cca 1300-750 př.n.l.)',
         'images/osada3R.jpg': 'Rekonstrukce nadzemního domu kůlové konstrukce',
-        'images/osadaR.jpg': 'Rekonstrukce osady doby bronzové',
+        'images/OsadaR.jpg': 'Rekonstrukce osady doby bronzové',
         'images/puzzle11.jpg': 'Jantarový korálek, doba bronzová - kultura lužických popelnicových polí (cca 1300-750 př.n.l.)',
         'images/puzzle12.jpg': 'Bronzový závěsek, doba bronzová - kultura lužických popelnicových polí (cca 1300-750 př.n.l.)',
         'images/Vanovice6R.jpg': 'Rekonstrukce nošení depotu Vanovice 6. Doba bronzová - kultura lužických popelnicových polí (cca 1300-750 př.n.l.)',
@@ -544,6 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
 
 
 
